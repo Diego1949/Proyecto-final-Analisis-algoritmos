@@ -1,0 +1,19 @@
+# Dockerfile.client
+# Etapa 1: compilacion
+FROM gcc:13 AS builder
+
+WORKDIR /app
+
+COPY token_utils.h token_utils.cpp client.cpp ./
+
+RUN g++ -O2 -static -o client client.cpp token_utils.cpp
+
+# Etapa 2: runtime minimo
+FROM alpine:3.20
+
+WORKDIR /app
+
+COPY --from=builder /app/client .
+
+# El cliente es interactivo, se ejecuta manualmente
+CMD ["./client"]

@@ -1,0 +1,23 @@
+# Dockerfile.server
+# Etapa 1: compilacion
+FROM gcc:13 AS builder
+
+WORKDIR /app
+
+# Copiar fuentes
+COPY token_utils.h token_utils.cpp server.cpp ./
+
+# Compilar servidor (puedes quitar -static si te da problemas)
+RUN g++ -O2 -static -o server server.cpp token_utils.cpp
+
+# Etapa 2: runtime minimo
+FROM alpine:3.20
+
+WORKDIR /app
+
+# Copiar binario ya compilado
+COPY --from=builder /app/server .
+
+EXPOSE 5000
+
+CMD ["./server"]

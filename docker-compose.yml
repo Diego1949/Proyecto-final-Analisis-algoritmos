@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  token_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: token_server
+    ports:
+      - "5000:5000"
+
+  token_client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: token_client
+    depends_on:
+      - token_server
+    stdin_open: true  # para entrada por consola
+    tty: true         # para una TTY interactiva
