@@ -1,25 +1,77 @@
-# Proyecto-final-Analisis-algoritmos
-# Sistema de Transacciones con Token Dinámico (Entrega Final)
+# Sistema de Transacciones Bancarias Seguras con Token Dinámico (TOTP)
 
-Este proyecto implementa un sistema simple de transacciones entre un **cliente** y un **servidor** bancario usando **C++** y **Docker**.  
-La seguridad se basa en un **token dinámico de 6 dígitos**, similar a los tokens de bancos.
 
-## Arquitectura
 
-La solución se compone de **dos contenedores Docker**:
+Este proyecto implementa un sistema de validación de transacciones distribuidas utilizando **contenedores Docker ligeros** y **C++**. El sistema simula la seguridad bancaria mediante claves dinámicas (Tokens) que cambian cada 30 segundos, eliminando la necesidad de enviar contraseñas a través de la red.
 
-- `token_server`: Servidor bancario que recibe transacciones y **valida el token**.
-- `token_client`: Cliente que genera y envía transacciones con el **token dinámico**.
 
-Los contenedores se comunican por **sockets TCP** sobre una red interna de Docker.
 
-Diagrama conceptual:
+## Características Principales
 
-Cliente (`token_client`) → [socket TCP puerto 5000] → Servidor (`token_server`)
 
-## Formato de la transacción
 
-Las transacciones se envían como una línea de texto con campos separados por `|`:
+* **Arquitectura Microservicios:** Cliente y Servidor totalmente desacoplados.
 
-```txt
-transaction_id|date_time|from_account|to_account|amount|token
+* **Seguridad:** Implementación de algoritmo TOTP (Time-based One-Time Password).
+
+* **Eficiencia:** Contenedores optimizados de **~10MB** gracias a la compilación estática en C++ (Alpine Linux).
+
+* **Despliegue:** Imágenes alojadas en Docker Hub para ejecución inmediata.
+
+
+
+## Arquitectura y Seguridad
+
+
+
+El sistema consta de dos contenedores comunicados vía Sockets TCP.
+
+
+
+**Diagrama de Secuencia:**
+
+
+
+```mermaid
+
+sequenceDiagram
+
+    participant Usuario
+
+    participant Cliente (C++)
+
+    participant Servidor (C++)
+
+
+
+    Note over Cliente,Servidor: Comparten SECRET_KEY (Nunca viaja por la red)
+
+
+
+    Usuario->>Cliente: Ingresa ID, Cuentas, Monto
+
+    Cliente->>Cliente: Calcula Hash(SECRET_KEY + Tiempo/30s)
+
+    Cliente->>Servidor: Envía Transacción + Token (ej. 540923)
+
+    
+
+    Note right of Servidor: Recibe solicitud
+
+    
+
+    Servidor->>Servidor: Genera su propio Token Local
+
+    Servidor->>Servidor: Compara (Token Recibido == Token Local)
+
+    
+
+    alt Tokens Coinciden
+
+        Servidor-->>Cliente: Responde "OK"
+
+    else No Coinciden
+
+        Servidor-->>Cliente: Responde "ERROR_TOKEN"
+
+    end
